@@ -3,15 +3,15 @@
 set -e
 
 if [ ! -f /usr/local/etc/php/php.ini ]; then
-cat <<EOF > /usr/local/etc/php/php.ini
-date.timezone = "${PHP_INI_DATE_TIMEZONE}"
-always_populate_raw_post_data = -1
-memory_limit = ${PHP_MEMORY_LIMIT}
-file_uploads = On
-upload_max_filesize = ${PHP_MAX_UPLOAD}
-post_max_size = ${PHP_MAX_UPLOAD}
-max_execution_time = ${PHP_MAX_EXECUTION_TIME}
-EOF
+        cat <<EOF > /usr/local/etc/php/php.ini
+        date.timezone = "${PHP_INI_DATE_TIMEZONE}"
+        always_populate_raw_post_data = -1
+        memory_limit = ${PHP_MEMORY_LIMIT}
+        file_uploads = On
+        upload_max_filesize = ${PHP_MAX_UPLOAD}
+        post_max_size = ${PHP_MAX_UPLOAD}
+        max_execution_time = ${PHP_MAX_EXECUTION_TIME}
+        EOF
 fi
 
 if [ -n "$MYSQL_PORT_3306_TCP" ]; then
@@ -27,14 +27,12 @@ if [ -n "$MYSQL_PORT_3306_TCP" ]; then
         fi
 fi
 
-
 if [ -z "$MAUTIC_DB_HOST" ]; then
         echo >&2 "error: missing MAUTIC_DB_HOST and MYSQL_PORT_3306_TCP environment variables"
         echo >&2 "  Did you forget to --link some_mysql_container:mysql or set an external db"
         echo >&2 "  with -e MAUTIC_DB_HOST=hostname:port?"
         exit 1
 fi
-
 
 if [ -z "$MAUTIC_DB_PASSWORD" ]; then
         echo >&2 "error: missing required MAUTIC_DB_PASSWORD environment variable"
@@ -43,7 +41,6 @@ if [ -z "$MAUTIC_DB_PASSWORD" ]; then
         echo >&2 "  (Also of interest might be MAUTIC_DB_USER and MAUTIC_DB_NAME.)"
         exit 1
 fi
-
 
 if ! [ -e index.php -a -e app/AppKernel.php ]; then
        echo "Mautic not found in $pwd - copying now..."
@@ -63,8 +60,6 @@ echo "The following information will be prefilled into the installer (keep passw
 echo "Host Name: $MAUTIC_DB_HOST"
 echo "Database Name: $MAUTIC_DB_NAME"
 echo "Database Username: $MAUTIC_DB_USER"
-echo "Database Password: $MAUTIC_DB_PASSWORD"
-
 
 # Write the database connection to the config so the installer prefills it
 if ! [ -e app/config/local.php ]; then
@@ -107,24 +102,16 @@ echo "========================================================================"
 
 "$@" &
 MAINPID=$!
-echo "Jonas!!!"
 
- shut_down() {
+shut_down() {
      echo "shutting down!!!!!!!!"
      if [[ "$MAUTIC_RUN_CRON_JOBS" == "true" ]]; then
          kill -TERM $CRONPID || echo 'Cron not killed. Already gone.'
          kill -TERM $CRONLOGPID || echo 'Cron log not killed. Already gone.'
      fi
      kill -TERM $MAINPID || echo 'Main process not killed. Already gone.'
- }
+}
 trap 'shut_down;' TERM INT
-
-# wait until all processes end (wait returns 0 retcode)
-#while :; do
-#    if wait; then
-#        break
-#    fi
-#done
 
 echo "Executing Azure Entrypoint"
 source /bin/init_container.sh
